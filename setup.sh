@@ -1,14 +1,14 @@
 #!/bin/zsh
-# 코스피 수집기 설치: venv → .env → git/GitHub(비공개 kospi-data) → launchd 등록.
-# 여러 번 실행해도 안전하다.
+# 코스피 수집기 설치: venv → .env → git/GitHub(비공개 kospi-data) → Dagu 작업 등록.
+# 여러 번 실행해도 안전하다. Dagu 서버는 맥미니에 이미 설치·실행 중이어야 한다.
 set -euo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 REPO=kospi-data
-LABEL=dev.goldenlabs.kospi-collector
-PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+DAG=kospi-collector
+DAGS_DIR="$HOME/.config/dagu/dags"
 PY="${PYTHON:-python3}"
 
 echo "[1/4] Python 가상환경과 패키지"
@@ -45,12 +45,11 @@ git add -A
 git diff --cached --quiet || git commit -q -m "chore: collector setup"
 git push -q -u origin main
 
-echo "[4/4] launchd 등록 (평일 16:40)"
-mkdir -p logs "$HOME/Library/LaunchAgents"
-sed "s#__ROOT__#$ROOT#g" "launchd/$LABEL.plist" > "$PLIST"
-plutil -lint "$PLIST" >/dev/null
-launchctl bootout "gui/$(id -u)" "$PLIST" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
+echo "[4/4] Dagu 작업 등록 (평일 16:40, kis 큐)"
+command -v dagu >/dev/null || { echo "  dagu가 없습니다. 맥미니 Dagu 설치를 먼저 하세요."; exit 1; }
+mkdir -p logs "$DAGS_DIR"
+sed "s#__ROOT__#$ROOT#g" "dagu/$DAG.yaml" > "$DAGS_DIR/$DAG.yaml"
+dagu validate "$DAGS_DIR/$DAG.yaml"
 
 echo
 echo "설치 완료."

@@ -1,0 +1,17 @@
+# 맥미니 예약 작업 등록서 (Dagu). 원본은 kospi-data 저장소의 dagu/kospi-collector.yaml이다.
+# setup.sh가 __ROOT__를 설치 경로로 바꿔 ~/.config/dagu/dags/에 복사한다.
+description: 코스피 전종목 일별 수집 후 GitHub kospi-data에 push
+group: kospi-data
+labels: "project=kospi-data resource=kis"
+schedule: "40 16 * * 1-5"     # 평일 16:40 (장 마감 후)
+queue: kis                    # KIS 키를 쓰는 작업끼리 동시에 돌지 않게 한다
+timeout_sec: 7200
+working_dir: __ROOT__
+env:
+  - PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+retry_policy:                 # 실패하면 30분 뒤 한 번 더. 수집기는 같은 날을 다시 받아도 안전하다
+  limit: 1
+  interval_sec: 1800
+steps:
+  - id: collect
+    run: .venv/bin/python collector.py --mode daily --push

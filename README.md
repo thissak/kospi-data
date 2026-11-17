@@ -56,7 +56,10 @@ cd ~/Projects/kospi-data
 1. `.venv`를 만들고 `requirements.txt`를 설치합니다.
 2. `.env`에 KIS 키가 있는지 확인합니다.
 3. git 저장소를 만들고, gh CLI로 비공개 저장소 `kospi-data`를 만들어 연결합니다.
-4. launchd 작업 `dev.goldenlabs.kospi-collector`를 등록합니다(평일 16:40).
+4. Dagu 작업 `kospi-collector`를 등록합니다(평일 16:40, `kis` 큐). 원본은 `dagu/kospi-collector.yaml`입니다.
+
+맥미니 예약 작업은 launchd·crontab이 아니라 Dagu(중앙 통제소)에 등록합니다.
+`kis` 큐는 같은 KIS 키를 쓰는 작업이 동시에 돌지 않게 합니다.
 
 초기 수집(2025-01-01 ~ 오늘, 약 2시간 반):
 
@@ -70,11 +73,19 @@ nohup .venv/bin/python collector.py --mode initial --push > logs/initial.out 2>&
 tail -f logs/collector.log                       # 진행 상황 (50종목마다 기록)
 cat data/meta.json                               # last_date, ticker_count, errors
 ls data/daily | head -1; ls data/daily | tail -1 # 날짜 범위
-launchctl print gui/$(id -u)/dev.goldenlabs.kospi-collector | grep -E "state|last exit"
-launchctl kickstart gui/$(id -u)/dev.goldenlabs.kospi-collector   # 일일 수집 지금 실행
+dagu history kospi-collector                     # 최근 실행 결과
+dagu start kospi-collector                       # 일일 수집 지금 실행
 ```
+
+Dagu 웹 화면은 맥미니 안(127.0.0.1:8090)에서만 열립니다. 다른 PC에서는 SSH 터널로 엽니다.
+
+```zsh
+ssh -N -L 8090:127.0.0.1:8090 afred@ai-macmini   # 그다음 브라우저에서 http://localhost:8090
+```
+
+로그인은 `admin`이고, 비밀번호는 맥미니 `~/.config/dagu/admin-password`에 있습니다.
 
 일일 수집은 마지막 수집일부터 오늘까지 받습니다. 마지막 수집일도 다시 받아 잠정치를 확정치로 덮어씁니다.
 며칠을 놓쳐도 다음 실행이 빠진 날을 채웁니다. 일봉 실패가 5%를 넘으면 마지막 수집일을 올리지 않아 다음 실행이 다시 받습니다.
 
-로그: `logs/collector.log`(수집기), `logs/launchd.log`(launchd 출력, 시작 실패 확인용).
+로그: `logs/collector.log`(수집기). 시작 실패 같은 실행 기록은 Dagu 화면이나 `dagu history`에서 봅니다.

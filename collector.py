@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""코스피 전종목 일별 데이터 수집기 (맥미니 launchd용).
+"""코스피 전종목 일별 데이터 수집기 (맥미니 Dagu 작업 kospi-collector).
 
 출처 우선순위
   1) 한국투자증권 Open API (KIS, 읽기 전용 키)
