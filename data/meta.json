@@ -1,0 +1,28 @@
+{
+  "last_date": "2026-11-16",
+  "first_date": "2025-01-02",
+  "ticker_count": 936,
+  "investor_count": 938,
+  "universe_count": 938,
+  "trading_days": 455,
+  "last_run": {
+    "mode": "initial",
+    "range": [
+      "2025-01-02",
+      "2026-11-16"
+    ],
+    "sources": {
+      "KIS": 937,
+      "FDR": 1
+    },
+    "price_failures": 0,
+    "ok": true
+  },
+  "updated_at": "2026-11-17T10:09:27",
+  "errors": [],
+  "notes": [
+    "가격은 원주가(수정주가 아님). 금액 단위는 원.",
+    "marcap_approx=1: 조회 시점 상장주식수 x 그날 종가로 계산한 추정값.",
+    "종목 목록은 수집 시점 상장 종목 기준이라 기간 중 상장폐지 종목은 빠진다."
+  ]
+}
