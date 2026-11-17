@@ -54,5 +54,5 @@ launchctl bootstrap "gui/$(id -u)" "$PLIST"
 
 echo
 echo "설치 완료."
-echo "초기 수집(약 1시간 이상):"
+echo "초기 수집(약 2시간 반):"
 echo "  cd $ROOT && nohup .venv/bin/python collector.py --mode initial --push > logs/initial.out 2>&1 &"
