@@ -1,15 +1,15 @@
 {
-  "last_date": "2026-11-16",
+  "last_date": "2026-11-17",
   "first_date": "2025-01-02",
   "ticker_count": 936,
-  "investor_count": 938,
+  "investor_count": 912,
   "universe_count": 938,
-  "trading_days": 455,
+  "trading_days": 456,
   "last_run": {
     "mode": "daily",
     "range": [
       "2026-11-16",
-      "2026-11-16"
+      "2026-11-17"
     ],
     "sources": {
       "KIS": 938
@@ -17,7 +17,7 @@
     "price_failures": 0,
     "ok": true
   },
-  "updated_at": "2026-11-17T11:29:15",
+  "updated_at": "2026-11-17T16:40:01",
   "errors": [],
   "notes": [
     "가격은 원주가(수정주가 아님). 금액 단위는 원.",
