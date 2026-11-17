@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.env
+run/
+logs/
+data/kospi.sqlite
+data/kospi.sqlite-*
