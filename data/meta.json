@@ -1,24 +1,501 @@
 {
-  "last_date": "2026-11-17",
+  "last_date": "2026-11-18",
   "first_date": "2025-01-02",
   "ticker_count": 936,
-  "investor_count": 912,
-  "universe_count": 938,
-  "trading_days": 456,
+  "investor_count": 817,
+  "universe_count": 936,
+  "trading_days": 457,
   "last_run": {
     "mode": "daily",
     "range": [
-      "2026-11-16",
-      "2026-11-17"
+      "2026-11-17",
+      "2026-11-18"
     ],
     "sources": {
-      "KIS": 938
+      "KIS": 831,
+      "FDR": 105
     },
     "price_failures": 0,
     "ok": true
   },
-  "updated_at": "2026-11-17T16:40:01",
-  "errors": [],
+  "updated_at": "2026-11-18T16:40:02",
+  "errors": [
+    {
+      "stage": "investor",
+      "code": "004310",
+      "error": "KIS FHPTJ04160001: OPSQ0009 호출 후처리(MCI수신) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004370",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004410",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004490",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004545",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004690",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004710",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004770",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004830",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004960",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004970",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "004980",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "00499K",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005070",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005090",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005180",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005250",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005257",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005300",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005320",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005380",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005387",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005389",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005420",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005430",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005440",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005490",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005500",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005680",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005720",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005725",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005740",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005745",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005750",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005800",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005810",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005830",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005850",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005870",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005935",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005940",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005945",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "005960",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006040",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006280",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006340",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006345",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006360",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006370",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006400",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006490",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006570",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006650",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006660",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006740",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "00680K",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006880",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006890",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "006980",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007070",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007110",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007120",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007160",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007210",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007280",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007340",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007460",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007540",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007570",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007590",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007610",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007660",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007690",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007700",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007860",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "007980",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "008040",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "008250",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "008600",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "008730",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "008970",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009070",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009140",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009150",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009160",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009180",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009200",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009240",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009290",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009320",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009415",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009420",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009450",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009540",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    },
+    {
+      "stage": "investor",
+      "code": "009770",
+      "error": "KIS FHPTJ04160001: OPSQ0008 호출 후처리(MCI전송) 오류 입니다."
+    }
+  ],
   "notes": [
     "가격은 원주가(수정주가 아님). 금액 단위는 원.",
     "marcap_approx=1: 조회 시점 상장주식수 x 그날 종가로 계산한 추정값.",
