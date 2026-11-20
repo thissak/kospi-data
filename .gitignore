@@ -5,3 +5,5 @@ run/
 logs/
 data/kospi.sqlite
 data/kospi.sqlite-*
+data/watch.sqlite
+data/watch.sqlite-*

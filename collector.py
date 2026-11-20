@@ -6,6 +6,8 @@
   2) pykrx  - .env에 KRX_ID/KRX_PW가 있을 때만 (2025년 말부터 KRX 로그인 필수)
   3) FinanceDataReader - 일봉만 (거래대금·시가총액·투자자 없음)
 
+코스피 수집이 끝나면 watch.json의 관심 종목(코스닥)과 코스닥 시장 수급을 이어서 받는다.
+
 사용법
   python collector.py --mode initial          # 2025-01-01부터 오늘까지
   python collector.py --mode daily            # 마지막 수집일부터 오늘까지 (빠진 날 자동 보충)
@@ -41,6 +43,10 @@ META_PATH = DATA / "meta.json"
 MARKET_CSV = DATA / "market.csv"
 LOG_PATH = ROOT / "logs" / "collector.log"
 TOKEN_PATH = ROOT / "run" / "kis_token.json"
+WATCH_CONFIG = ROOT / "watch.json"
+WATCH_DIR = DATA / "watch"
+WATCH_DB = DATA / "watch.sqlite"
+MARKET_KOSDAQ_CSV = DATA / "market_kosdaq.csv"
 
 INITIAL_START = date(2025, 1, 1)
 CUTOFF = (15, 40)    # 이 시각 전에는 오늘을 빼고 어제까지만 받는다 (장중 미완성 + KIS 투자자 API 시간 제한)
@@ -169,9 +175,10 @@ def investor_row(r: dict, code: str, qty_unit: int = 1) -> tuple:
             v("frgn_ntby_tr_pbmn"), v("orgn_ntby_tr_pbmn"), v("prsn_ntby_tr_pbmn"))
 
 
-def kis_index(kis: KIS, start: date, end: date) -> list[tuple]:
+def kis_index(kis: KIS, start: date, end: date, iscd: str = "0001") -> list[tuple]:
+    """iscd: 0001 코스피, 1001 코스닥."""
     rows = collect_back(lambda cur: kis.get("inquire-daily-indexchartprice", "FHKUP03500100", {
-        "FID_COND_MRKT_DIV_CODE": "U", "FID_INPUT_ISCD": "0001", "FID_INPUT_DATE_1": ymd(start),
+        "FID_COND_MRKT_DIV_CODE": "U", "FID_INPUT_ISCD": iscd, "FID_INPUT_DATE_1": ymd(start),
         "FID_INPUT_DATE_2": ymd(cur), "FID_PERIOD_DIV_CODE": "D"})["output2"], start, end)
     # 지수 거래량은 천주, 거래대금은 백만원 단위로 온다.
     return [(iso(r["stck_bsop_date"]), float(r["bstp_nmix_oprc"]), float(r["bstp_nmix_hgpr"]),
@@ -179,12 +186,16 @@ def kis_index(kis: KIS, start: date, end: date) -> list[tuple]:
              num(r["acml_vol"]) * 1000, num(r["acml_tr_pbmn"]) * 1_000_000) for r in rows]
 
 
-def kis_market_investor(kis: KIS, start: date, end: date) -> list[tuple]:
+MARKETS = {"KOSPI": ("0001", "KSP"), "KOSDAQ": ("1001", "KSQ")}  # 지수 업종코드, 시장 구분
+
+
+def kis_market_investor(kis: KIS, start: date, end: date, market: str = "KOSPI") -> list[tuple]:
+    iscd, mkt = MARKETS[market]
     rows = collect_back(lambda cur: kis.get("inquire-investor-daily-by-market", "FHPTJ04040000", {
-        "FID_COND_MRKT_DIV_CODE": "U", "FID_INPUT_ISCD": "0001", "FID_INPUT_DATE_1": ymd(cur),
-        "FID_INPUT_ISCD_1": "KSP", "FID_INPUT_DATE_2": ymd(cur), "FID_INPUT_ISCD_2": "0001"})["output"],
+        "FID_COND_MRKT_DIV_CODE": "U", "FID_INPUT_ISCD": iscd, "FID_INPUT_DATE_1": ymd(cur),
+        "FID_INPUT_ISCD_1": mkt, "FID_INPUT_DATE_2": ymd(cur), "FID_INPUT_ISCD_2": iscd})["output"],
         start, end)
-    return [investor_row(r, "KOSPI", qty_unit=1000) for r in rows]
+    return [investor_row(r, market, qty_unit=1000) for r in rows]
 
 
 def kis_stock_investor(kis: KIS, code: str, start: date, end: date) -> list[tuple]:
@@ -272,9 +283,9 @@ def load_tickers(session: requests.Session) -> list[tuple[str, str]]:
 
 # ---------- 저장 ----------
 
-def open_db() -> sqlite3.Connection:
+def open_db(path: Path = DB_PATH) -> sqlite3.Connection:
     DATA.mkdir(exist_ok=True)
-    con = sqlite3.connect(DB_PATH)
+    con = sqlite3.connect(path)
     con.executescript(SCHEMA)
     return con
 
@@ -289,7 +300,7 @@ def write_csv(path: Path, header: list[str], rows) -> int:
     return len(rows)
 
 
-def export_day(con: sqlite3.Connection, day: str) -> int:
+def export_day(con: sqlite3.Connection, day: str, folder: Path = DAILY) -> int:
     rows = con.execute("""
         SELECT p.date, p.code, p.name, p.open, p.high, p.low, p.close, p.volume, p.value,
                m.marcap, m.shares, m.approx,
@@ -299,17 +310,17 @@ def export_day(con: sqlite3.Connection, day: str) -> int:
         LEFT JOIN marketcap m ON m.date = p.date AND m.code = p.code
         LEFT JOIN investor i ON i.date = p.date AND i.code = p.code
         WHERE p.date = ? ORDER BY p.code""", (day,))
-    return write_csv(DAILY / f"{day}.csv", DAILY_COLUMNS, rows)
+    return write_csv(folder / f"{day}.csv", DAILY_COLUMNS, rows)
 
 
-def export_market(con: sqlite3.Connection) -> None:
+def export_market(con: sqlite3.Connection, path: Path = MARKET_CSV, market: str = "KOSPI") -> None:
     rows = con.execute("""
         SELECT x.date, x.open, x.high, x.low, x.close, x.volume, x.value,
                i.foreign_net_value, i.inst_net_value, i.indiv_net_value,
                i.foreign_net_qty, i.inst_net_qty, i.indiv_net_qty
-        FROM "index" x LEFT JOIN investor i ON i.date = x.date AND i.code = 'KOSPI'
-        ORDER BY x.date""")
-    write_csv(MARKET_CSV, MARKET_COLUMNS, rows)
+        FROM "index" x LEFT JOIN investor i ON i.date = x.date AND i.code = ?
+        ORDER BY x.date""", (market,))
+    write_csv(path, MARKET_COLUMNS, rows)
 
 
 def load_meta() -> dict:
@@ -322,6 +333,72 @@ def save_meta(meta: dict) -> None:
 
 
 # ---------- 수집 ----------
+
+def save_stock(con, kis: KIS | None, code: str, name: str, start: date, end: date,
+               dayset: set[str], last_day: str, fail, stage: str = "") -> str | None:
+    """종목 하나의 일봉·시가총액·투자자를 DB에 넣는다. 일봉 출처를 돌려준다(일봉 실패면 None)."""
+    src = None
+    try:
+        src, rows, shares = fetch_prices(kis, code, start, end)
+        rows = [r for r in rows if r[0] in dayset]
+        con.executemany("INSERT OR REPLACE INTO prices VALUES(?,?,?,?,?,?,?,?,?,?)",
+                        [(d, code, name, o, h, l, c, v, val, src) for d, o, h, l, c, v, val in rows])
+        if shares:
+            # 상장주식수는 조회 시점 값이라, 마지막 거래일만 확정(approx=0)이고 과거는 추정(approx=1)이다.
+            con.executemany(MARKETCAP_UPSERT, [(d, code, c * shares, shares, int(d != last_day))
+                                               for d, _, _, _, c, _, _ in rows])
+    except Exception as e:
+        src = None
+        fail(f"{stage}prices", e, code)
+    if kis:
+        try:
+            con.executemany("INSERT OR REPLACE INTO investor VALUES(?,?,?,?,?,?,?,?)",
+                            [r for r in kis_stock_investor(kis, code, start, end) if r[0] in dayset])
+        except Exception as e:
+            fail(f"{stage}investor", e, code)
+    return src
+
+
+def collect_watch(kis: KIS, end: date, prev: str | None, fail) -> str | None:
+    """watch.json의 관심 종목(코스닥)과 코스닥 지수·시장 수급을 받아 data/watch/와 market_kosdaq.csv로 낸다.
+    prev(마지막 수집일)도 다시 받는다. 새 watch_last_date를 돌려준다. 하나라도 실패하면 prev를 그대로 돌려줘
+    다음 실행이 같은 구간을 다시 받는다."""
+    failed: list[str] = []
+
+    def wfail(stage, e, code=None):
+        failed.append(stage)
+        fail(stage, e, code)
+
+    cfg = json.loads(WATCH_CONFIG.read_text(encoding="utf-8"))
+    start = date.fromisoformat(prev or cfg["start"])
+    con = open_db(WATCH_DB)
+    try:
+        idx = kis_index(kis, start, end, MARKETS["KOSDAQ"][0])
+        con.executemany('INSERT OR REPLACE INTO "index" VALUES(?,?,?,?,?,?,?)', idx)
+        days = [r[0] for r in idx]
+        if not days:
+            return prev
+        dayset, last_day = set(days), days[-1]
+        start = date.fromisoformat(days[0])
+        try:
+            con.executemany("INSERT OR REPLACE INTO investor VALUES(?,?,?,?,?,?,?,?)",
+                            kis_market_investor(kis, start, end, "KOSDAQ"))
+        except Exception as e:
+            wfail("watch_market_investor", e)
+        for code, name in cfg["stocks"].items():
+            save_stock(con, kis, code, name, start, end, dayset, last_day, wfail, stage="watch_")
+        con.commit()
+        for d in days:
+            export_day(con, d, WATCH_DIR)
+        export_market(con, MARKET_KOSDAQ_CSV, "KOSDAQ")
+        log.info("관심 종목 %d개 수집: %s ~ %s, 오류 %d", len(cfg["stocks"]), days[0], last_day, len(failed))
+        return prev if failed else last_day
+    except Exception as e:
+        wfail("watch", e)
+        return prev
+    finally:
+        con.close()
+
 
 def collect(mode: str) -> dict:
     meta = load_meta()
@@ -388,24 +465,9 @@ def collect(mode: str) -> dict:
 
     sources: Counter = Counter()
     for n, (code, name) in enumerate(tickers, 1):
-        try:
-            src, rows, shares = fetch_prices(kis, code, start, end)
-            rows = [r for r in rows if r[0] in dayset]
-            con.executemany("INSERT OR REPLACE INTO prices VALUES(?,?,?,?,?,?,?,?,?,?)",
-                            [(d, code, name, o, h, l, c, v, val, src) for d, o, h, l, c, v, val in rows])
-            if shares:
-                # 상장주식수는 조회 시점 값이라, 마지막 거래일만 확정(approx=0)이고 과거는 추정(approx=1)이다.
-                con.executemany(MARKETCAP_UPSERT, [(d, code, c * shares, shares, int(d != last_day))
-                                                   for d, _, _, _, c, _, _ in rows])
+        src = save_stock(con, kis, code, name, start, end, dayset, last_day, fail)
+        if src:
             sources[src] += 1
-        except Exception as e:
-            fail("prices", e, code)
-        if kis:
-            try:
-                con.executemany("INSERT OR REPLACE INTO investor VALUES(?,?,?,?,?,?,?,?)",
-                                [r for r in kis_stock_investor(kis, code, start, end) if r[0] in dayset])
-            except Exception as e:
-                fail("investor", e, code)
         if n % 50 == 0:
             con.commit()
             log.info("진행 %d/%d", n, len(tickers))
@@ -416,12 +478,16 @@ def collect(mode: str) -> dict:
         export_day(con, d)
     export_market(con)
 
-    # 5) meta.json — 일봉 실패가 5%를 넘으면 마지막 수집일을 올리지 않아 다음 실행이 다시 받는다.
+    # 5) 관심 종목(코스닥) — 코스피가 끝난 뒤 이어서 받는다
+    watch_last = collect_watch(kis, end, meta.get("watch_last_date"), fail) if kis else meta.get("watch_last_date")
+
+    # 6) meta.json — 일봉 실패가 5%를 넘으면 마지막 수집일을 올리지 않아 다음 실행이 다시 받는다.
     price_fail = sum(1 for e in errors if e["stage"] == "prices")
     ok = price_fail <= len(tickers) * 0.05
     q = lambda sql, *a: con.execute(sql, a).fetchone()[0]
     meta.update(
         last_date=last_day if ok else meta.get("last_date"),
+        watch_last_date=watch_last,
         first_date=q("SELECT MIN(date) FROM prices"),
         ticker_count=q("SELECT COUNT(*) FROM prices WHERE date = ?", last_day),
         investor_count=q("SELECT COUNT(*) FROM investor WHERE date = ? AND code != 'KOSPI'", last_day),
@@ -447,7 +513,7 @@ def git_push(meta: dict) -> bool:
     def git(*args):
         return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
 
-    git("add", "data/daily", "data/market.csv", "data/meta.json")
+    git("add", "data/daily", "data/market.csv", "data/meta.json", "data/watch", "data/market_kosdaq.csv")
     if git("diff", "--cached", "--quiet").returncode == 0:
         log.info("커밋할 변경이 없습니다.")
         return True

@@ -1,5 +1,5 @@
 #!/bin/zsh
-# 코스피 수집기 설치: venv → .env → git/GitHub(비공개 kospi-data) → Dagu 작업 등록.
+# 코스피 수집기 설치: venv → .env → git/GitHub(공개 kospi-data) → Dagu 작업 등록.
 # 여러 번 실행해도 안전하다. Dagu 서버는 맥미니에 이미 설치·실행 중이어야 한다.
 set -euo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -25,7 +25,7 @@ if [ ! -f .env ]; then
 fi
 grep -q '^KIS_APP_KEY=.\+' .env || { echo "  .env의 KIS_APP_KEY가 비어 있습니다."; exit 1; }
 
-echo "[3/4] git 저장소와 GitHub 비공개 저장소 $REPO"
+echo "[3/4] git 저장소와 GitHub 공개 저장소 $REPO"
 gh auth status >/dev/null 2>&1 || { echo "  gh 로그인이 필요합니다: gh auth login"; exit 1; }
 gh auth setup-git
 [ -d .git ] || git init -q -b main
@@ -38,7 +38,7 @@ if ! git remote get-url origin >/dev/null 2>&1; then
   if gh repo view "$LOGIN/$REPO" >/dev/null 2>&1; then
     git remote add origin "https://github.com/$LOGIN/$REPO.git"
   else
-    gh repo create "$REPO" --private --source . --remote origin
+    gh repo create "$REPO" --public --source . --remote origin
   fi
 fi
 git add -A

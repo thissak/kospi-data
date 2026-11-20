@@ -1,7 +1,8 @@
 # kospi-data
 
-맥미니에서 매일 장 마감 후 코스피 전종목 데이터를 모아 이 비공개 저장소에 올립니다.
-클라우드 Claude(08:10 코스피 브리핑)는 이 저장소를 받아 전종목 스크리닝을 합니다.
+맥미니에서 매일 장 마감 후 코스피 전종목과 코스닥 관심 종목 데이터를 모아 이 공개 저장소에 올립니다.
+클라우드 Claude(평일 06:30 코스피 아침 브리핑)는 로그인 없이 이 저장소를 받아 씁니다. 저장소를 비공개로 바꾸면 브리핑이 데이터를 받지 못합니다.
+키·토큰은 커밋하지 않습니다(`.env`, `run/`은 .gitignore).
 
 ## 데이터 출처
 
@@ -16,14 +17,27 @@
 - 15:40 전에 실행하면 오늘은 빼고 어제까지만 받습니다(장중 미완성 데이터 방지).
 - 종목: KIS 종목 마스터의 코스피 주식(보통주·우선주·리츠·인프라·DR·외국주권). ETF·ETN·펀드는 제외합니다.
 
+### 코스닥 관심 종목 (`watch.json`)
+
+코스피 수집이 끝나면 같은 실행에서 `watch.json`의 종목과 코스닥 지수·시장 수급을 KIS로 이어서 받습니다.
+
+```json
+{ "start": "2025-06-01", "stocks": { "041510": "에스엠", "035900": "JYP Ent.", "122870": "와이지엔터테인먼트" } }
+```
+
+- 처음에는 `start`부터 받고, 그 뒤로는 `meta.json`의 `watch_last_date`부터 받습니다.
+- 종목을 추가하면 `meta.json`에서 `watch_last_date`를 지웁니다. 다음 실행이 `start`부터 다시 받습니다.
+
 ## 저장 구조
 
 | 경로 | 내용 | GitHub |
 |---|---|---|
 | `data/daily/YYYY-MM-DD.csv` | 그날의 전종목 (UTF-8) | 올림 |
 | `data/market.csv` | 코스피 지수 일봉 + 시장 전체 투자자별 순매수 | 올림 |
-| `data/meta.json` | 마지막 수집일, 종목 수, 오류 목록 | 올림 |
-| `data/kospi.sqlite` | 누적 테이블 `prices`, `marketcap`, `investor`, `index` | 올리지 않음 (.gitignore) |
+| `data/watch/YYYY-MM-DD.csv` | 그날의 코스닥 관심 종목 (`daily`와 같은 열) | 올림 |
+| `data/market_kosdaq.csv` | 코스닥 지수 일봉 + 시장 전체 투자자별 순매수 (`market.csv`와 같은 열) | 올림 |
+| `data/meta.json` | 마지막 수집일(`last_date`, 관심 종목은 `watch_last_date`), 종목 수, 오류 목록 | 올림 |
+| `data/kospi.sqlite`, `data/watch.sqlite` | 누적 테이블 `prices`, `marketcap`, `investor`, `index` | 올리지 않음 (.gitignore) |
 
 ### `data/daily/YYYY-MM-DD.csv` 열
 
@@ -36,13 +50,14 @@
 | `foreign_net_*` `inst_net_*` `indiv_net_*` | 외국인·기관·개인 순매수. `_value`는 원, `_qty`는 주 |
 | `source` | 일봉 출처 (KIS / pykrx / FDR) |
 
-`market.csv`의 순매수 열도 같은 단위(원, 주)입니다.
+`market.csv`, `market_kosdaq.csv`의 순매수 열도 같은 단위(원, 주)입니다.
 
 ### 알려진 한계
 
 - 종목 목록은 수집 시점 기준입니다. 2025년 이후 상장폐지된 종목은 과거 날짜에도 없습니다.
 - 가격은 원주가라서 액면분할 전후로 끊깁니다. 장기 수익률을 계산할 때 주의하세요.
 - FDR로 대체된 날은 거래대금·시가총액이 비어 있을 수 있습니다.
+- 2026-09-14부터 KRX 애프터마켓(16:00~20:00)이 열립니다. 이 시간에 받은 당일 행은 `close`가 정규장 종가가 아니라 애프터마켓 현재가입니다(예: 하이브 11/17 16:48 수집 153,700 → 확정 154,800). 다음 실행이 마지막 수집일을 다시 받아 확정치로 고칩니다.
 
 ## 설치 (맥미니)
 
@@ -55,7 +70,7 @@ cd ~/Projects/kospi-data
 
 1. `.venv`를 만들고 `requirements.txt`를 설치합니다.
 2. `.env`에 KIS 키가 있는지 확인합니다.
-3. git 저장소를 만들고, gh CLI로 비공개 저장소 `kospi-data`를 만들어 연결합니다.
+3. git 저장소를 만들고, gh CLI로 공개 저장소 `kospi-data`를 만들어 연결합니다.
 4. Dagu 작업 `kospi-collector`를 등록합니다(평일 16:40, `kis` 큐). 원본은 `dagu/kospi-collector.yaml`입니다.
 
 맥미니 예약 작업은 launchd·crontab이 아니라 Dagu(중앙 통제소)에 등록합니다.
