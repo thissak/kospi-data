@@ -12,6 +12,8 @@
   python collector.py --mode initial          # 2025-01-01부터 오늘까지
   python collector.py --mode daily            # 마지막 수집일부터 오늘까지 (빠진 날 자동 보충)
   python collector.py --mode daily --push     # 수집 후 git add/commit/push
+  python collector.py --mode detail --codes 352820,041510 --from 2026-09-01 --push
+                                              # 기관 세부 순매수만 과거까지 다시 받기
 """
 from __future__ import annotations
 
@@ -47,6 +49,8 @@ WATCH_CONFIG = ROOT / "watch.json"
 WATCH_DIR = DATA / "watch"
 WATCH_DB = DATA / "watch.sqlite"
 MARKET_KOSDAQ_CSV = DATA / "market_kosdaq.csv"
+DAILY_DETAIL = DATA / "daily_detail"
+WATCH_DETAIL = DATA / "watch_detail"
 
 INITIAL_START = date(2025, 1, 1)
 CUTOFF = (15, 40)    # 이 시각 전에는 오늘을 빼고 어제까지만 받는다 (장중 미완성 + KIS 투자자 API 시간 제한)
@@ -75,6 +79,8 @@ CREATE TABLE IF NOT EXISTS marketcap(date TEXT, code TEXT, marcap INTEGER, share
 CREATE TABLE IF NOT EXISTS investor(date TEXT, code TEXT, foreign_net_qty INTEGER, inst_net_qty INTEGER,
     indiv_net_qty INTEGER, foreign_net_value INTEGER, inst_net_value INTEGER, indiv_net_value INTEGER,
     PRIMARY KEY(date, code));
+CREATE TABLE IF NOT EXISTS investor_detail(date TEXT, code TEXT, key TEXT, value INTEGER,
+    PRIMARY KEY(date, code, key));
 CREATE TABLE IF NOT EXISTS "index"(date TEXT PRIMARY KEY, open REAL, high REAL, low REAL, close REAL,
     volume INTEGER, value INTEGER);
 """
@@ -175,6 +181,27 @@ def investor_row(r: dict, code: str, qty_unit: int = 1) -> tuple:
             v("frgn_ntby_tr_pbmn"), v("orgn_ntby_tr_pbmn"), v("prsn_ntby_tr_pbmn"))
 
 
+DETAIL_SUFFIX = "_ntby_tr_pbmn"
+BASIC_INVESTORS = {"frgn", "orgn", "prsn"}  # 외국인·기관 합계·개인은 investor 테이블에 이미 있다
+
+
+def detail_rows(r: dict, code: str) -> list[tuple]:
+    """기관 세부(금융투자·투신·사모·은행·보험·연기금 등) 순매수 금액. 응답의 '<투자자>_ntby_tr_pbmn'
+    항목을 KIS 이름 그대로 key로 둔다(백만원 → 원). 이름을 미리 정해 두지 않아 KIS가 항목을 바꿔도 깨지지 않는다."""
+    out = []
+    for k, v in r.items():
+        who = k[:-len(DETAIL_SUFFIX)]
+        if not k.endswith(DETAIL_SUFFIX) or who in BASIC_INVESTORS:
+            continue
+        try:
+            n = num(v)
+        except (TypeError, ValueError):
+            continue
+        if n is not None:
+            out.append((iso(r["stck_bsop_date"]), code, who, n * 1_000_000))
+    return out
+
+
 def kis_index(kis: KIS, start: date, end: date, iscd: str = "0001") -> list[tuple]:
     """iscd: 0001 코스피, 1001 코스닥."""
     rows = collect_back(lambda cur: kis.get("inquire-daily-indexchartprice", "FHKUP03500100", {
@@ -198,11 +225,12 @@ def kis_market_investor(kis: KIS, start: date, end: date, market: str = "KOSPI")
     return [investor_row(r, market, qty_unit=1000) for r in rows]
 
 
-def kis_stock_investor(kis: KIS, code: str, start: date, end: date) -> list[tuple]:
+def kis_stock_investor(kis: KIS, code: str, start: date, end: date) -> tuple[list[tuple], list[tuple]]:
+    """(investor 행, investor_detail 행)을 돌려준다. 같은 응답에서 둘 다 뽑아 요청 수는 그대로다."""
     rows = collect_back(lambda cur: kis.get("investor-trade-by-stock-daily", "FHPTJ04160001", {
         "FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": code, "FID_INPUT_DATE_1": ymd(cur),
         "FID_ORG_ADJ_PRC": "", "FID_ETC_CLS_CODE": ""})["output2"], start, end)
-    return [investor_row(r, code) for r in rows]
+    return [investor_row(r, code) for r in rows], [d for r in rows for d in detail_rows(r, code)]
 
 
 def kis_prices(kis: KIS, code: str, start: date, end: date):
@@ -313,6 +341,21 @@ def export_day(con: sqlite3.Connection, day: str, folder: Path = DAILY) -> int:
     return write_csv(folder / f"{day}.csv", DAILY_COLUMNS, rows)
 
 
+def export_detail(con: sqlite3.Connection, day: str, folder: Path = DAILY_DETAIL) -> int:
+    """그날의 기관 세부 순매수(원)를 종목당 한 줄로 낸다. 열은 그날 응답에 있던 투자자 이름이다."""
+    keys = [k for (k,) in con.execute("SELECT DISTINCT key FROM investor_detail WHERE date = ? ORDER BY key", (day,))]
+    if not keys:
+        return 0
+    by_code: dict[str, dict] = {}
+    for code, name, key, value in con.execute("""
+            SELECT d.code, p.name, d.key, d.value FROM investor_detail d
+            LEFT JOIN prices p ON p.date = d.date AND p.code = d.code
+            WHERE d.date = ? ORDER BY d.code""", (day,)):
+        by_code.setdefault(code, {"name": name})[key] = value
+    return write_csv(folder / f"{day}.csv", ["date", "code", "name", *[f"{k}_net_value" for k in keys]],
+                     [[day, code, v["name"], *[v.get(k) for k in keys]] for code, v in by_code.items()])
+
+
 def export_market(con: sqlite3.Connection, path: Path = MARKET_CSV, market: str = "KOSPI") -> None:
     rows = con.execute("""
         SELECT x.date, x.open, x.high, x.low, x.close, x.volume, x.value,
@@ -352,8 +395,11 @@ def save_stock(con, kis: KIS | None, code: str, name: str, start: date, end: dat
         fail(f"{stage}prices", e, code)
     if kis:
         try:
+            inv, detail = kis_stock_investor(kis, code, start, end)
             con.executemany("INSERT OR REPLACE INTO investor VALUES(?,?,?,?,?,?,?,?)",
-                            [r for r in kis_stock_investor(kis, code, start, end) if r[0] in dayset])
+                            [r for r in inv if r[0] in dayset])
+            con.executemany("INSERT OR REPLACE INTO investor_detail VALUES(?,?,?,?)",
+                            [r for r in detail if r[0] in dayset])
         except Exception as e:
             fail(f"{stage}investor", e, code)
     return src
@@ -390,6 +436,7 @@ def collect_watch(kis: KIS, end: date, prev: str | None, fail) -> str | None:
         con.commit()
         for d in days:
             export_day(con, d, WATCH_DIR)
+            export_detail(con, d, WATCH_DETAIL)
         export_market(con, MARKET_KOSDAQ_CSV, "KOSDAQ")
         log.info("관심 종목 %d개 수집: %s ~ %s, 오류 %d", len(cfg["stocks"]), days[0], last_day, len(failed))
         return prev if failed else last_day
@@ -476,6 +523,7 @@ def collect(mode: str) -> dict:
     # 4) CSV 내보내기
     for d in days:
         export_day(con, d)
+        export_detail(con, d)
     export_market(con)
 
     # 5) 관심 종목(코스닥) — 코스피가 끝난 뒤 이어서 받는다
@@ -509,11 +557,43 @@ def collect(mode: str) -> dict:
     return meta
 
 
+def backfill_detail(codes: list[str], since: date) -> int:
+    """이미 수집한 날짜의 기관 세부 순매수만 다시 받는다. 일봉·meta.json은 건드리지 않는다.
+    watch.json 종목은 watch.sqlite·data/watch_detail, 나머지는 kospi.sqlite·data/daily_detail로 간다."""
+    now = datetime.now()
+    end = now.date() if (now.hour, now.minute) >= CUTOFF else now.date() - timedelta(days=1)
+    kis = KIS(make_session())
+    watch = set(json.loads(WATCH_CONFIG.read_text(encoding="utf-8"))["stocks"]) if WATCH_CONFIG.exists() else set()
+    failed = 0
+    for db, folder, group in ((WATCH_DB, WATCH_DETAIL, [c for c in codes if c in watch]),
+                              (DB_PATH, DAILY_DETAIL, [c for c in codes if c not in watch])):
+        if not group:
+            continue
+        con = open_db(db)
+        known = {d for (d,) in con.execute("SELECT DISTINCT date FROM prices WHERE date >= ?", (since.isoformat(),))}
+        for code in group:
+            try:
+                _, detail = kis_stock_investor(kis, code, since, end)
+                con.executemany("INSERT OR REPLACE INTO investor_detail VALUES(?,?,?,?)",
+                                [r for r in detail if r[0] in known])
+                log.info("기관 세부 %s: %d일", code, len({r[0] for r in detail if r[0] in known}))
+            except Exception as e:
+                failed += 1
+                log.error("기관 세부 %s 실패: %s", code, e)
+        con.commit()
+        for d in sorted(known):
+            export_detail(con, d, folder)
+        con.close()
+    return failed
+
+
 def git_push(meta: dict) -> bool:
     def git(*args):
         return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
 
-    git("add", "data/daily", "data/market.csv", "data/meta.json", "data/watch", "data/market_kosdaq.csv")
+    paths = ["data/daily", "data/market.csv", "data/meta.json", "data/watch", "data/market_kosdaq.csv",
+             "data/daily_detail", "data/watch_detail"]
+    git("add", *[p for p in paths if (ROOT / p).exists()])  # 없는 경로가 하나라도 있으면 git add 전체가 실패한다
     if git("diff", "--cached", "--quiet").returncode == 0:
         log.info("커밋할 변경이 없습니다.")
         return True
@@ -529,7 +609,9 @@ def git_push(meta: dict) -> bool:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="코스피 전종목 일별 데이터 수집기")
-    ap.add_argument("--mode", choices=["initial", "daily"], required=True)
+    ap.add_argument("--mode", choices=["initial", "daily", "detail"], required=True)
+    ap.add_argument("--codes", default="", help="detail 모드: 쉼표로 나눈 종목코드")
+    ap.add_argument("--from", dest="since", default="", help="detail 모드: 시작일 YYYY-MM-DD")
     ap.add_argument("--push", action="store_true", help="수집 후 git add/commit/push")
     args = ap.parse_args()
 
@@ -542,6 +624,19 @@ def main() -> int:
     load_dotenv(ROOT / ".env")
 
     status = 0
+    if args.mode == "detail":
+        codes = [c.strip() for c in args.codes.split(",") if c.strip()]
+        if not codes or not args.since:
+            ap.error("detail 모드는 --codes와 --from이 필요합니다")
+        meta = load_meta()
+        try:
+            status = 1 if backfill_detail(codes, date.fromisoformat(args.since)) else 0
+        except Exception:
+            log.exception("기관 세부 수집 실패")
+            status = 1
+        if args.push and not git_push(meta):
+            status = 1
+        return status
     try:
         meta = collect(args.mode)
     except Exception as e:
