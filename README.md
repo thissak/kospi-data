@@ -36,6 +36,7 @@
 | `data/market.csv` | 코스피 지수 일봉 + 시장 전체 투자자별 순매수 | 올림 |
 | `data/watch/YYYY-MM-DD.csv` | 그날의 코스닥 관심 종목 (`daily`와 같은 열) | 올림 |
 | `data/market_kosdaq.csv` | 코스닥 지수 일봉 + 시장 전체 투자자별 순매수 (`market.csv`와 같은 열) | 올림 |
+| `data/daily_detail/YYYY-MM-DD.csv`, `data/watch_detail/YYYY-MM-DD.csv` | 그날의 기관 세부 순매수(금융투자·투신·사모·은행·보험·연기금 등). 아래 설명 | 올림 |
 | `data/meta.json` | 마지막 수집일(`last_date`, 관심 종목은 `watch_last_date`), 종목 수, 오류 목록 | 올림 |
 | `data/kospi.sqlite`, `data/watch.sqlite` | 누적 테이블 `prices`, `marketcap`, `investor`, `index` | 올리지 않음 (.gitignore) |
 
@@ -51,6 +52,20 @@
 | `source` | 일봉 출처 (KIS / pykrx / FDR) |
 
 `market.csv`, `market_kosdaq.csv`의 순매수 열도 같은 단위(원, 주)입니다.
+
+### 기관 세부 순매수 (`daily_detail`, `watch_detail`)
+
+종목별 투자자 조회(`FHPTJ04160001`) 응답에는 기관 합계 말고도 금융투자·투신·사모·은행·보험·연기금 같은 세부 항목이 들어 있습니다.
+수집기는 응답의 `<투자자>_ntby_tr_pbmn` 항목을 모두 `investor_detail` 테이블에 넣고, 종목당 한 줄로 냅니다. 요청 수는 늘지 않습니다.
+
+- 열 이름은 KIS 필드 이름에 `_net_value`를 붙인 것입니다(예: `scrt_net_value`). 단위는 원입니다.
+- 열 구성은 그날 응답에 있던 항목을 따릅니다. 이름의 뜻은 KIS 개발자센터의 "종목별 투자자매매동향(일별)" 명세에서 확인합니다.
+- 외국인·기관 합계·개인은 `daily`/`watch` 파일에 이미 있어 여기에는 넣지 않습니다.
+- 이 기능을 넣기 전 날짜는 비어 있습니다. 과거를 채우려면 종목을 골라 다시 받습니다:
+
+```zsh
+.venv/bin/python collector.py --mode detail --codes 352820,041510,035900,122870 --from 2026-09-01 --push
+```
 
 ### 알려진 한계
 
