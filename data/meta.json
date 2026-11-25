@@ -1,15 +1,15 @@
 {
-  "last_date": "2026-11-24",
+  "last_date": "2026-11-25",
   "first_date": "2025-01-02",
   "ticker_count": 935,
-  "investor_count": 907,
+  "investor_count": 908,
   "universe_count": 936,
-  "trading_days": 461,
+  "trading_days": 462,
   "last_run": {
     "mode": "daily",
     "range": [
-      "2026-11-23",
-      "2026-11-24"
+      "2026-11-24",
+      "2026-11-25"
     ],
     "sources": {
       "KIS": 936
@@ -17,22 +17,12 @@
     "price_failures": 0,
     "ok": true
   },
-  "updated_at": "2026-11-24T16:40:00",
+  "updated_at": "2026-11-25T16:40:01",
   "errors": [
     {
       "stage": "investor",
-      "code": "002320",
-      "error": "HTTPSConnectionPool(host='openapi.koreainvestment.com', port=9443): Read timed out."
-    },
-    {
-      "stage": "investor",
-      "code": "014790",
-      "error": "HTTPSConnectionPool(host='openapi.koreainvestment.com', port=9443): Read timed out."
-    },
-    {
-      "stage": "investor",
-      "code": "097230",
-      "error": "HTTPSConnectionPool(host='openapi.koreainvestment.com', port=9443): Read timed out."
+      "code": "000080",
+      "error": "('Connection broken: IncompleteRead(59136 bytes read, 14415 more expected)', IncompleteRead(59136 bytes read, 14415 more expected))"
     }
   ],
   "notes": [
@@ -40,5 +30,5 @@
     "marcap_approx=1: 조회 시점 상장주식수 x 그날 종가로 계산한 추정값.",
     "종목 목록은 수집 시점 상장 종목 기준이라 기간 중 상장폐지 종목은 빠진다."
   ],
-  "watch_last_date": "2026-11-24"
+  "watch_last_date": "2026-11-25"
 }
